@@ -19,10 +19,7 @@ throw_alert({
 	  type: 'div', // type of element
 	  text: 'Hello World!' // text of element div
 	  }
-	}, undefined /* this for qf you can't change it */,
-      undefined /* this for c_in_c you can't change it */,
-      undefined /*this for style of parent of this element you can change it*/ , {
-		position : 'relative' /*this for style of parent parent of this element you can change it*/ 
+	}, document.body, true})
 })
 	
 ```
