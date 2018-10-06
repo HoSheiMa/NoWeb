@@ -3,7 +3,18 @@ var arr_Q_children = [];
 var keys_elements = {};
 var global_vars = [];
 var hot_global_build = {};
+var children_arr_Q = [];
 
+function formating_children() {
+  for (;;) {
+    if (children_arr_Q.length == 0) break;
+    var focus_e = children_arr_Q.shift();
+    console.log(focus_e);
+
+    delete children_arr_Q.shift();
+    throw_alert(focus_e[0], focus_e[1], true);
+  }
+}
 function keys(el, keys) {
   keys_elements[keys] = el;
 }
@@ -27,54 +38,70 @@ function textTo(e, txt) {
 }
 function setState(list) {
   for (i in list) {
-    val  = list[i];
-    name = i;
-    // for change in arr hot_global_build
-    for (ii in hot_global_build) {
-      for (iii in hot_global_build[ii]){
-        name_focus = hot_global_build[ii][iii][2];
-        if (name_focus == name) {
-          focus_rewrite = hot_global_build[ii][iii][0];
-          if (typeof focus_rewrite == "object") {
-            focus_rewrite.innerHTML = focus_rewrite.innerHTML.replace(hot_global_build[ii][iii][1], "@"+name_focus);
-          } else {
-            focus_element_rewrite = arr_Q[ii];
-            focus_element_rewrite.setAttribute(
-                hot_global_build[ii][iii][0],
-              focus_element_rewrite.getAttribute(focus_rewrite).replace(hot_global_build[ii][iii][1],  "@"+name_focus)
-              )
-              ;
+    if (typeof list[i] == "object") {
+      name = i;
+      for (iiz in hot_global_build) {
+        for (iii in hot_global_build[iiz]) {
+          name_focus = hot_global_build[iiz][iii][2];
+          if (name_focus == name) {
+            focus_rewrite = hot_global_build[iiz][iii][0];
+            if (typeof focus_rewrite == "object") {
+              focus_rewrite.innerHTML = ""; // !![if use this will remove old html]
+              throw_alert(list[i], focus_rewrite, true);
+            }
           }
-          hot_global_build[ii][iii][1] = val;
-
-        } else continue;
+        }
       }
+    } else {
+      val = list[i];
+      name = i;
+      // for change in arr hot_global_build
+      for (ii in hot_global_build) {
+        for (iii in hot_global_build[ii]) {
+          name_focus = hot_global_build[ii][iii][2];
+          if (name_focus == name) {
+            focus_rewrite = hot_global_build[ii][iii][0];
+            if (typeof focus_rewrite == "object") {
+              focus_rewrite.innerHTML = focus_rewrite.innerHTML.replace(
+                hot_global_build[ii][iii][1],
+                "@" + name_focus
+              );
+            } else {
+              focus_element_rewrite = arr_Q[ii];
+              focus_element_rewrite.setAttribute(
+                hot_global_build[ii][iii][0],
+                focus_element_rewrite
+                  .getAttribute(focus_rewrite)
+                  .replace(hot_global_build[ii][iii][1], "@" + name_focus)
+              );
+            }
+            hot_global_build[ii][iii][1] = val;
+          } else continue;
+        }
+      }
+      // for rewrite in vars and attrs;
+      for (ii in hot_global_build) {
+        for (iiiz in hot_global_build[ii]) {
+          focus_rewrite = hot_global_build[ii][iiiz][0];
+          focuse_value = hot_global_build[ii][iiiz][1];
+          focus_tag_value = hot_global_build[ii][iiiz][2];
+          focus_element_rewrite = arr_Q[ii];
 
-    }
-    // for rewrite in vars and attrs;
-    for (ii in hot_global_build) {
-      for (iiiz in hot_global_build[ii]) {
-        focus_rewrite = hot_global_build[ii][iiiz][0];
-        focuse_value = hot_global_build[ii][iiiz][1];
-        focus_tag_value = hot_global_build[ii][iiiz][2];
-        focus_element_rewrite = arr_Q[ii];
-        
-        if (typeof focus_rewrite == "object") {
-          
-          focus_rewrite.innerHTML = focuse_value;
+          if (typeof focus_rewrite == "object") {
+            focus_rewrite.innerHTML = focuse_value;
+          } else {
+            // get element for change attrs
 
-        } else {
-            // get element for change attrs 
+            focuse_value = focus_element_rewrite
+              .getAttribute(focus_rewrite)
+              .replace(`@${focus_tag_value}`, focuse_value);
 
-          
-          focuse_value = (focus_element_rewrite.getAttribute(focus_rewrite)).replace(`@${focus_tag_value}`, focuse_value);
-
-          focus_element_rewrite.setAttribute(focus_rewrite, focuse_value);
+            focus_element_rewrite.setAttribute(focus_rewrite, focuse_value);
+          }
         }
       }
     }
   }
-
 }
 function transform_html_vars(e, has_hotreload) {
   for (i in e.children) {
@@ -83,86 +110,105 @@ function transform_html_vars(e, has_hotreload) {
         new_end_txt = "";
         transform_need = e.children[i].innerText.split(",");
         for (ii in transform_need) {
-            focus_var = transform_need[ii].replace(/ /gi, '');
-            for (iii in arr_Q) {
-                if (e == arr_Q[iii]){
-                    id = iii;
-                    for (iiii in global_vars) {
-                        if (focus_var ==  iiii) {
-                            if (global_vars[iiii][1] == true) {
-                                new_end_txt += global_vars[iiii][0];
-                                //e.children[i].innerHTML = new_end_txt;
-                                if (has_hotreload == true ){
-                                  hot_global_build[id].push([e.children[i], global_vars[iiii][0], focus_var]);
-                                }
-                            } else {
-                                if (global_vars[iiii][2] == id) {
-                                    new_end_txt += global_vars[iiii][0];
-                                    if (has_hotreload == true) {
-                                      hot_global_build[id].push([e.children[i], global_vars[iiii][0], focus_var]);
-                                    }
-
-                                } else {
-                                    e.children[i].innerHTML = "error To use a privide virable from :" + id;
-                                    if (has_hotreload == true) {
-                                      hot_global_build[id].push([e.children[i], global_vars[iiii][0], focus_var]);
-                                    }
-
-                                }
-                            }
-                        }
+          focus_var = transform_need[ii].replace(/ /gi, "");
+          for (iii in arr_Q) {
+            if (e == arr_Q[iii]) {
+              id = iii;
+              for (iiii in global_vars) {
+                if (focus_var == iiii) {
+                  if (global_vars[iiii][1] == true) {
+                    new_end_txt += global_vars[iiii][0];
+                    //e.children[i].innerHTML = new_end_txt;
+                    if (has_hotreload == true) {
+                      hot_global_build[id].push([
+                        e.children[i],
+                        global_vars[iiii][0],
+                        focus_var
+                      ]);
                     }
-
+                  } else {
+                    if (global_vars[iiii][2] == id) {
+                      new_end_txt += global_vars[iiii][0];
+                      if (has_hotreload == true) {
+                        hot_global_build[id].push([
+                          e.children[i],
+                          global_vars[iiii][0],
+                          focus_var
+                        ]);
+                      }
+                    } else {
+                      e.children[i].innerHTML =
+                        "error To use a privide virable from :" + id;
+                      if (has_hotreload == true) {
+                        hot_global_build[id].push([
+                          e.children[i],
+                          global_vars[iiii][0],
+                          focus_var
+                        ]);
+                      }
+                    }
+                  }
                 }
+              }
             }
-            
+          }
         }
-          e.children[i].innerHTML = new_end_txt;
+        e.children[i].innerHTML = new_end_txt;
       }
     }
   }
-    for (i in e.getAttributeNames() ) {
-        new_end_txt = '';
-        value = e.getAttribute(e.getAttributeNames()[i]).split(' ');
-        for (ii in value) {
-            focus = value[ii].replace(/ /gi, '');
-            if (focus[0] == '@') {
-                focus_var = focus.replace("@", "");
-                for (iii in arr_Q) {
-                    if (e == arr_Q[iii]) {
-                        id = iii;
-                        for (iiii in global_vars) {
-                            if (focus_var == iiii) {
-                                if (global_vars[iiii][1] == true) {
-                                    new_end_txt += ' ' +global_vars[iiii][0];
-                                    if (has_hotreload == true) {
-                                      hot_global_build[id].push([e.getAttributeNames()[i], global_vars[iiii][0], focus_var]);
-                                    }
-                                } else {
-                                    if (global_vars[iiii][2] == id) {
-                                        new_end_txt += ' ' + global_vars[iiii][0];
-                                        if (has_hotreload == true) {
-                                          hot_global_build[id].push([e.getAttributeNames()[i], global_vars[iiii][0], focus_var]);
-                                        }
-
-                                    } else {
-                                       // new_end_txt += " " + "error To use a privide virable from :" + id;
-                                        if (has_hotreload == true) {
-                                          hot_global_build[id].push([e.getAttributeNames()[i], global_vars[iiii][0], focus_var]);
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
+  for (i in e.getAttributeNames()) {
+    new_end_txt = "";
+    value = e.getAttribute(e.getAttributeNames()[i]).split(" ");
+    for (ii in value) {
+      focus = value[ii].replace(/ /gi, "");
+      if (focus[0] == "@") {
+        focus_var = focus.replace("@", "");
+        for (iii in arr_Q) {
+          if (e == arr_Q[iii]) {
+            id = iii;
+            for (iiii in global_vars) {
+              if (focus_var == iiii) {
+                if (global_vars[iiii][1] == true) {
+                  new_end_txt += " " + global_vars[iiii][0];
+                  if (has_hotreload == true) {
+                    hot_global_build[id].push([
+                      e.getAttributeNames()[i],
+                      global_vars[iiii][0],
+                      focus_var
+                    ]);
+                  }
+                } else {
+                  if (global_vars[iiii][2] == id) {
+                    new_end_txt += " " + global_vars[iiii][0];
+                    if (has_hotreload == true) {
+                      hot_global_build[id].push([
+                        e.getAttributeNames()[i],
+                        global_vars[iiii][0],
+                        focus_var
+                      ]);
                     }
+                  } else {
+                    // new_end_txt += " " + "error To use a privide virable from :" + id;
+                    if (has_hotreload == true) {
+                      hot_global_build[id].push([
+                        e.getAttributeNames()[i],
+                        global_vars[iiii][0],
+                        focus_var
+                      ]);
+                    }
+                  }
                 }
-            } else {
-                new_end_txt += " " + focus;
+              }
             }
+          }
         }
-        e.setAttribute(e.getAttributeNames()[i], new_end_txt);
+      } else {
+        new_end_txt += " " + focus;
+      }
     }
+    e.setAttribute(e.getAttributeNames()[i], new_end_txt);
+  }
 }
 function htmlTo(e, html) {
   e.innerHTML = html;
@@ -217,13 +263,13 @@ function throw_alert(arr, qf, has_child_in_child, for_el2, for_el, changing) {
       // key => (String)
       // vars => (Object<ListHash>) {vars, etc}
       // global vars from compiler
-        // like selector => to get element json info
-        // like e => go get finshing element
-        // like n_id_q => id of element from arr_Q !![not support init.beforeonload]
+      // like selector => to get element json info
+      // like e => go get finshing element
+      // like n_id_q => id of element from arr_Q !![not support init.beforeonload]
       // chnage to rebiuld a elements jsut write change(key of element, el :  { new changing }) !![should element have a key]
-      // setState => to update vars to lastest value just write setState({any-vars : new-value, etc})
+      // setState => to update vars to lastest value just write setState({any-vars : new-value, etc !![you can use json transforming to element but only woth <vars>]})
       selector = arr[i];
-      //init beforeonload 
+      //init beforeonload
       // init
       selector.init ? (init = selector.init) : (init = false);
       if (init != false) {
@@ -294,19 +340,19 @@ function throw_alert(arr, qf, has_child_in_child, for_el2, for_el, changing) {
       // vars
       vars = {};
       if (selector.vars) {
-          for (i in selector.vars) {
-              selector.vars[i].push(n_id_q);
-              global_vars[i] = selector.vars[i];
-          }
+        for (i in selector.vars) {
+          selector.vars[i].push(n_id_q);
+          global_vars[i] = selector.vars[i];
+        }
       }
       arr_Q[n_id_q] = e;
       if (selector.hot == true) {
-          hot_global_build[n_id_q] = []; // for add it for hot reload virable !
-          transform_html_vars(e, true); // to if have soem virable in html or attr
-      }else {
-          transform_html_vars(e, false); // to if have soem virable in html or attr
+        hot_global_build[n_id_q] = []; // for add it for hot reload virable !
+        transform_html_vars(e, true); // to if have soem virable in html or attr
+      } else {
+        transform_html_vars(e, false); // to if have soem virable in html or attr
       }
-        
+
       if (!changing) {
         if (!qf) {
           el2.append(e);
@@ -318,78 +364,16 @@ function throw_alert(arr, qf, has_child_in_child, for_el2, for_el, changing) {
       selector.init ? (init = selector.init) : (init = false);
       if (init != false) {
         if (init.onload) init.onload.call();
-        if (init.children) throw_alert(init.children, e, true);
+        if (init.children) children_arr_Q.push([selector.children, e]);
       }
       // children
       if (selector.children) {
-        arr_Q_children.push([n_id_q, selector.children]);
+        children_arr_Q.push([selector.children, e]);
       }
-      child_translate(n_id_q);
     }
+    formating_children();
   }
 }
-function child_translate(expt) {
-  for (i in arr_Q_children) {
-    if (arr_Q_children[i][0] == expt) {
-      qf = arr_Q[expt];
-      for (iii in arr_Q_children[i][1]) {
-        /*                            console.log(qf)
-*/
-        if (!arr_Q_children[i][1][iii]) {
-          var found = 1;
-          for (;;) {
-            i = i - found;
-
-            if (!arr_Q_children[i][1][iii]) {
-              continue;
-            } else {
-              qf = arr_Q_children[i][0];
-              qf = arr_Q[qf];
-              break;
-            }
-          }
-        }
-        throw_alert(
-          {
-            el: arr_Q_children[i][1][iii]
-          },
-          qf,
-          true
-        );
-        continue;
-      }
-      break;
-    }
-  }
-}
-
 function change(k, new_chaning) {
   throw_alert(new_chaning, true, true, {}, {}, keys_elements[k]);
 }
-/*
-
-
-how use 
-
-
-
-throw_alert({
-    nameChild  : {
-        init : {
-            children : {
-    
-            },
-            onload : function () {
-                
-            }
-        }
-    }
-})
-
-
-
-
-
-
-
-*/
